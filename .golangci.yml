@@ -1,0 +1,24 @@
+run:
+  timeout: 5m
+issues:
+  max-per-linter: 0
+  max-same-issues: 0
+  exclude-use-default: false
+linters:
+  enable-all: true
+  disable:
+    - cyclop
+    - exhaustivestruct
+    - forbidigo
+    - funlen
+    - gci
+    - gofumpt
+    - ifshort
+    - interfacer
+    - lll
+    - maligned
+    - nlreturn
+    - paralleltest
+    - testpackage
+    - thelper
+    - wrapcheck
