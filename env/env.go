@@ -2,12 +2,18 @@
 package env
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
 	dotenv "github.com/joho/godotenv"
 )
+
+// ErrMissingFlag is raised when there a required flag is missing from the
+// environment or program options.
+var ErrMissingFlag = errors.New("missing required flag or env")
 
 // Env contains all the configuration options for the program.
 type Env struct {
@@ -30,23 +36,42 @@ var (
 )
 
 // Load loads all preliminary datum.
-func Load() {
+func Load() error {
 	if err := dotenv.Load(); err != nil {
 		log.Printf("[WARN]: %s\n", err)
 	}
 
-	shared = New()
+	var err error
+
+	shared, err = New()
+
+	return err
 }
 
 // New creates a new env instance.
-func New() Env {
-	return Env{
-		trelloAppKey:    loadStringFlagOrEnv(trelloAppKey, "TRELLO_APP_KEY"),
-		trelloToken:     loadStringFlagOrEnv(trelloToken, "TRELLO_TOKEN"),
-		trelloBoardID:   loadStringFlagOrEnv(trelloBoardID, "TRELLO_BOARD_ID"),
-		trelloList:      loadStringFlagOrEnv(trelloList, "TRELLO_LIST"),
-		gogoanimeDomain: loadStringFlagOrEnv(gogoanimeDomain, "GOGOANIME_DOMAIN"),
+func New() (Env, error) {
+	var env Env
+
+	env.trelloAppKey = loadStringFlagOrEnv(trelloAppKey, "TRELLO_APP_KEY")
+	env.trelloToken = loadStringFlagOrEnv(trelloToken, "TRELLO_TOKEN")
+	env.trelloBoardID = loadStringFlagOrEnv(trelloBoardID, "TRELLO_BOARD_ID")
+	env.trelloList = loadStringFlagOrEnv(trelloList, "TRELLO_LIST")
+	env.gogoanimeDomain = loadStringFlagOrEnv(gogoanimeDomain, "GOGOANIME_DOMAIN")
+
+	switch {
+	case env.trelloAppKey == "":
+		return env, fmt.Errorf("%w: -trello_app_key or TRELLO_APP_KEY", ErrMissingFlag)
+	case env.trelloToken == "":
+		return env, fmt.Errorf("%w: -trello_token or TRELLO_TOKEN", ErrMissingFlag)
+	case env.trelloBoardID == "":
+		return env, fmt.Errorf("%w: -trello_board_id or TRELLO_BOARD_ID", ErrMissingFlag)
+	case env.trelloList == "":
+		return env, fmt.Errorf("%w: -trello_list or TRELLO_LIST", ErrMissingFlag)
+	case env.gogoanimeDomain == "":
+		return env, fmt.Errorf("%w: -gogoanime_domain or GOGOANIME_DOMAIN", ErrMissingFlag)
 	}
+
+	return env, nil
 }
 
 func loadStringFlagOrEnv(f *string, envName string) string {

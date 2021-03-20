@@ -1,16 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/aaronsky/animenight/browser"
 	"github.com/aaronsky/animenight/env"
 	"github.com/aaronsky/animenight/gogoanime"
 	"github.com/aaronsky/animenight/trello"
 )
 
 func main() {
-	env.Load()
+	if err := env.Load(); err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	trelloClient := trello.NewClient(env.TrelloAppKey(), env.TrelloToken())
 
@@ -32,10 +35,8 @@ func main() {
 		return
 	}
 
-	urls := make([]string, len(cards))
-	for i, c := range cards {
-		urls[i] = gogoanime.FindEpisodeURL(fields.Gogoanime(c), fields.EpisodeNumber(c))
+	for _, c := range cards {
+		url := gogoanime.FindEpisodeURL(fields.Gogoanime(c), fields.EpisodeNumber(c))
+		fmt.Println(url)
 	}
-
-	browser.OpenURLs(urls...)
 }
